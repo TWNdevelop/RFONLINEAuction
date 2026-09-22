@@ -1,0 +1,40 @@
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+secrets/
+*.pem
+*.key
+id.json
+*-keypair.json
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# Local databases and logs
+*.sqlite3
+*.log
+
+# Build output
+node_modules/
+target/
+dist/
+build/
+.anchor/
+
+# Workspace scratch files
+work/
+outputs/
+
+# Editors and OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
