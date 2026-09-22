@@ -1,7 +1,7 @@
 :root {
   color-scheme: dark;
   font-family: Inter, system-ui, sans-serif;
-  font-size: 18px;
+  font-size: 15px;
   color: #f5f7ff;
   background: #0d1017;
 }
@@ -11,17 +11,17 @@ body { margin: 0; }
 a { color: inherit; }
 
 .site-header {
-  padding: 20px max(24px, calc((100% - 900px) / 2));
+  padding: 14px max(20px, calc((100% - 1100px) / 2));
   background: #171c27;
   border-bottom: 1px solid #2b3447;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: 700;
 }
 
 .site-header a { text-decoration: none; }
-.container { width: min(900px, calc(100% - 32px)); margin: 40px auto; }
-h1 { font-size: 2rem; margin-bottom: 24px; }
-h2 { font-size: 1.35rem; }
+.container { width: min(1100px, calc(100% - 28px)); margin: 26px auto; }
+h1 { font-size: 1.65rem; margin-bottom: 18px; }
+h2 { font-size: 1.2rem; }
 .title-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .title-row h1 { margin: 0; }
 .button-link {
@@ -32,23 +32,43 @@ h2 { font-size: 1.35rem; }
   font-weight: 700;
 }
 
-.auction-list { display: grid; gap: 16px; }
+.auction-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
 .auction-card, .panel {
   background: #171c27;
   border: 1px solid #2b3447;
-  border-radius: 12px;
-  padding: 22px;
+  border-radius: 10px;
+  padding: 16px;
 }
 
+.auction-card {
+  display: flex;
+  flex-direction: column;
+  aspect-ratio: 1;
+  min-width: 0;
+}
 .auction-link {
   display: grid;
-  gap: 8px;
+  align-content: start;
+  flex: 1;
+  gap: 6px;
   text-decoration: none;
+}
+.auction-link strong {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 1.05rem;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
 }
 
 .auction-card:hover { border-color: #6d87ff; }
 .auction-card span, .auction-id { color: #aeb8cd; }
-.auction-card form { margin-top: 14px; }
+.auction-card form { margin-top: 10px; }
 .panel { margin-top: 24px; }
 .back { color: #aeb8cd; }
 
@@ -56,7 +76,7 @@ form { display: grid; gap: 18px; }
 label { display: grid; gap: 8px; }
 input, textarea, button {
   width: 100%;
-  padding: 13px 14px;
+  padding: 10px 12px;
   border: 1px solid #3a455d;
   border-radius: 8px;
   font: inherit;
@@ -68,7 +88,7 @@ button { color: #fff; background: #526de5; border: 0; cursor: pointer; font-weig
 button:hover { background: #647ff1; }
 .danger { background: #9d3541; }
 .danger:hover { background: #b54250; }
-.small { width: auto; padding: 9px 14px; }
+.small { width: auto; padding: 7px 11px; font-size: .9rem; }
 .delete-form { margin: 16px 0; }
 
 table { width: 100%; border-collapse: collapse; }
@@ -88,8 +108,10 @@ th, td { padding: 12px 8px; border-bottom: 1px solid #2b3447; text-align: left; 
 .result { background: #183e2b; }
 
 @media (max-width: 600px) {
-  :root { font-size: 17px; }
+  :root { font-size: 14px; }
   .container { margin-top: 24px; }
+  .auction-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .auction-card { padding: 12px; }
   th:last-child, td:last-child { display: none; }
   .title-row { align-items: stretch; flex-direction: column; }
   .button-link { text-align: center; }
