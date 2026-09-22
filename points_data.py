@@ -1,87 +1,83 @@
-"""Validation and encoding for player point accrual records."""
+"""Validation and deterministic hashing of a player points list."""
 
 from __future__ import annotations
 
+import hashlib
 import json
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 
+MAX_PLAYERS = 50
 MAX_NICKNAME_BYTES = 64
-MAX_OPERATION_ID_BYTES = 64
 
 
 @dataclass(frozen=True)
-class PlayerAccrual:
-    player_id: int
+class PlayerPoints:
     nickname: str
     points: int
 
 
-@dataclass(frozen=True)
-class AccrualBatch:
-    operation_id: str
-    players: tuple[PlayerAccrual, ...]
-
-
-def _required_text(value: Any, field: str, max_bytes: int) -> str:
+def _nickname(value: Any, field: str) -> str:
     if not isinstance(value, str) or not value.strip():
         raise ValueError(f"{field} must be a non-empty string")
     value = value.strip()
-    if len(value.encode("utf-8")) > max_bytes:
-        raise ValueError(f"{field} is longer than {max_bytes} UTF-8 bytes")
+    if len(value.encode("utf-8")) > MAX_NICKNAME_BYTES:
+        raise ValueError(f"{field} is longer than {MAX_NICKNAME_BYTES} UTF-8 bytes")
     return value
 
 
-def load_batch(path: str | Path) -> AccrualBatch:
+def load_players(path: str | Path) -> tuple[PlayerPoints, ...]:
     with Path(path).open("r", encoding="utf-8") as source:
         raw = json.load(source)
 
-    if not isinstance(raw, dict):
-        raise ValueError("JSON root must be an object")
+    if not isinstance(raw, list) or not raw:
+        raise ValueError("JSON root must be a non-empty list")
+    if len(raw) > MAX_PLAYERS:
+        raise ValueError(f"the list cannot contain more than {MAX_PLAYERS} players")
 
-    operation_id = _required_text(
-        raw.get("operation_id"), "operation_id", MAX_OPERATION_ID_BYTES
-    )
-    raw_players = raw.get("players")
-    if not isinstance(raw_players, list) or not raw_players:
-        raise ValueError("players must be a non-empty list")
-
-    players: list[PlayerAccrual] = []
-    seen_ids: set[int] = set()
-    for index, item in enumerate(raw_players):
+    players: list[PlayerPoints] = []
+    seen_nicknames: set[str] = set()
+    for index, item in enumerate(raw):
         prefix = f"players[{index}]"
         if not isinstance(item, dict):
             raise ValueError(f"{prefix} must be an object")
+        if set(item) != {"nickname", "points"}:
+            raise ValueError(f"{prefix} must contain only nickname and points")
 
-        player_id = item.get("player_id")
-        points = item.get("points")
-        if isinstance(player_id, bool) or not isinstance(player_id, int) or player_id <= 0:
-            raise ValueError(f"{prefix}.player_id must be a positive integer")
-        if player_id in seen_ids:
-            raise ValueError(f"duplicate player_id in batch: {player_id}")
+        nickname = _nickname(item["nickname"], f"{prefix}.nickname")
+        nickname_key = nickname.casefold()
+        if nickname_key in seen_nicknames:
+            raise ValueError(f"duplicate nickname in list: {nickname}")
+
+        points = item["points"]
         if isinstance(points, bool) or not isinstance(points, int) or points <= 0:
             raise ValueError(f"{prefix}.points must be a positive integer")
 
-        nickname = _required_text(
-            item.get("nickname"), f"{prefix}.nickname", MAX_NICKNAME_BYTES
-        )
-        players.append(PlayerAccrual(player_id, nickname, points))
-        seen_ids.add(player_id)
+        players.append(PlayerPoints(nickname, points))
+        seen_nicknames.add(nickname_key)
 
-    return AccrualBatch(operation_id, tuple(players))
+    return tuple(players)
 
 
-def memo_bytes(operation_id: str, player: PlayerAccrual) -> bytes:
-    record = {
-        "v": 1,
-        "type": "points_accrual",
-        "operation_id": operation_id,
-        "player_id": player.player_id,
-        "nickname": player.nickname,
-        "points": player.points,
-    }
+def canonical_json_bytes(players: tuple[PlayerPoints, ...]) -> bytes:
+    """Return stable JSON bytes so input order and formatting do not affect the hash."""
+    canonical_players = [
+        {"nickname": player.nickname, "points": player.points}
+        for player in sorted(players, key=lambda player: player.nickname.casefold())
+    ]
     return json.dumps(
-        record, ensure_ascii=False, separators=(",", ":"), sort_keys=True
+        canonical_players,
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
     ).encode("utf-8")
+
+
+def calculate_hash(players: tuple[PlayerPoints, ...]) -> str:
+    return hashlib.sha256(canonical_json_bytes(players)).hexdigest()
+
+
+def memo_bytes(players: tuple[PlayerPoints, ...]) -> bytes:
+    return f"RFOA1:{calculate_hash(players)}".encode("ascii")

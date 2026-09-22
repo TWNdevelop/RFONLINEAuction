@@ -1,15 +1,10 @@
-{
-  "operation_id": "daily-2026-09-22",
-  "players": [
-    {
-      "player_id": 101,
-      "nickname": "DarkKnight",
-      "points": 150
-    },
-    {
-      "player_id": 102,
-      "nickname": "StormMage",
-      "points": 200
-    }
-  ]
-}
+[
+  {
+    "nickname": "DarkKnight",
+    "points": 150
+  },
+  {
+    "nickname": "StormMage",
+    "points": 200
+  }
+]
