@@ -69,7 +69,19 @@ h2 { font-size: 1.2rem; }
 }
 
 .auction-card:hover { border-color: #6d87ff; }
+.auction-card.active {
+  border-color: #d8ad38;
+  box-shadow: 0 0 0 1px rgba(216, 173, 56, .18);
+}
+.auction-card.active:hover { border-color: #f0c64f; }
 .auction-card span, .auction-id { color: #aeb8cd; }
+.auction-card .auction-status {
+  color: #e7bd47;
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
 .auction-deadline {
   display: grid;
   gap: 2px;
