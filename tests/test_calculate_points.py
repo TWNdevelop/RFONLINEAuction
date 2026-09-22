@@ -13,6 +13,12 @@ class ParsePointsMemoTests(unittest.TestCase):
     def test_ignores_old_hash_memo(self):
         self.assertIsNone(parse_points_memo("[70] RFOA1:abc123"))
 
+    def test_reads_negative_auction_result(self):
+        self.assertEqual(
+            parse_points_memo('[40] ["Player_1",-25,"Sword"]'),
+            [("Player_1", -25)],
+        )
+
     def test_ignores_unrelated_or_invalid_memo(self):
         self.assertIsNone(parse_points_memo(None))
         self.assertIsNone(parse_points_memo("hello"))

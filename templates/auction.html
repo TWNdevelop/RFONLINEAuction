@@ -16,6 +16,12 @@
       {% if winner %}
         <span>Победитель: {{ winner['nickname'] }}</span>
         <span>Ставка: {{ winner['points'] }} очков</span>
+        {% if auction['result_signature'] %}
+          <a href="https://explorer.solana.com/tx/{{ auction['result_signature'] }}?cluster=devnet"
+             target="_blank" rel="noopener">Результат в Solana</a>
+        {% else %}
+          <span>Результат ожидает отправки в Solana</span>
+        {% endif %}
       {% else %}
         <span>Ставок не было</span>
       {% endif %}

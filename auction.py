@@ -21,7 +21,9 @@ def connect(database: str | Path) -> sqlite3.Connection:
         CREATE TABLE IF NOT EXISTS auctions (
             id TEXT PRIMARY KEY,
             text TEXT NOT NULL,
-            ends_at TEXT
+            ends_at TEXT,
+            finalized INTEGER NOT NULL DEFAULT 0,
+            result_signature TEXT
         );
 
         CREATE TABLE IF NOT EXISTS bids (
@@ -38,7 +40,13 @@ def connect(database: str | Path) -> sqlite3.Connection:
     }
     if "ends_at" not in columns:
         connection.execute("ALTER TABLE auctions ADD COLUMN ends_at TEXT")
-        connection.commit()
+    if "finalized" not in columns:
+        connection.execute(
+            "ALTER TABLE auctions ADD COLUMN finalized INTEGER NOT NULL DEFAULT 0"
+        )
+    if "result_signature" not in columns:
+        connection.execute("ALTER TABLE auctions ADD COLUMN result_signature TEXT")
+    connection.commit()
     return connection
 
 
@@ -98,7 +106,11 @@ def place_bid(
 
 def get_auction(connection: sqlite3.Connection, auction_id: str):
     auction = connection.execute(
-        "SELECT id, text, ends_at FROM auctions WHERE id = ?", (auction_id,)
+        """
+        SELECT id, text, ends_at, finalized, result_signature
+        FROM auctions WHERE id = ?
+        """,
+        (auction_id,),
     ).fetchone()
     if auction is None:
         raise ValueError(f"auction not found: {auction_id}")
@@ -148,6 +160,7 @@ def list_auctions(connection: sqlite3.Connection):
     return connection.execute(
         """
         SELECT auctions.id, auctions.text, auctions.ends_at,
+               auctions.finalized, auctions.result_signature,
                COUNT(bids.id) AS bid_count
         FROM auctions
         LEFT JOIN bids ON bids.auction_id = auctions.id

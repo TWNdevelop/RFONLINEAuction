@@ -27,6 +27,16 @@ def parse_points_memo(memo: str | None) -> list[tuple[str, int]] | None:
         raw_players = json.loads(raw_memo)
     except json.JSONDecodeError:
         return None
+    if (
+        isinstance(raw_players, list)
+        and len(raw_players) == 3
+        and isinstance(raw_players[0], str)
+        and isinstance(raw_players[1], int)
+        and not isinstance(raw_players[1], bool)
+        and raw_players[1] < 0
+        and isinstance(raw_players[2], str)
+    ):
+        return [(raw_players[0].strip(), raw_players[1])]
     if not isinstance(raw_players, list) or not raw_players:
         return None
 
