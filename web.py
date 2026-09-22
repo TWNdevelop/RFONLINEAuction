@@ -10,6 +10,7 @@ from flask import Flask, abort, flash, redirect, render_template, request, url_f
 from auction import (
     auction_has_ended,
     connect,
+    delete_auction,
     get_auction,
     get_winner,
     list_auctions,
@@ -63,6 +64,16 @@ def create_app(database: str | Path | None = None) -> Flask:
     @app.get("/health")
     def health():
         return {"status": "ok"}
+
+    @app.post("/auction/<auction_id>/delete")
+    def delete_auction_page(auction_id: str):
+        try:
+            with closing(connect(app.config["DATABASE"])) as connection:
+                delete_auction(connection, auction_id)
+            flash("Аукцион удалён")
+        except ValueError as error:
+            flash(str(error), "error")
+        return redirect(url_for("index"))
 
     return app
 

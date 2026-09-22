@@ -39,6 +39,13 @@ class WebTests(unittest.TestCase):
         response = self.client.get("/auction/auction-1")
         self.assertIn(b"auction-timer", response.data)
 
+    def test_deletes_auction(self):
+        response = self.client.post(
+            "/auction/auction-1/delete", follow_redirects=True
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn(b"Test Sword", response.data)
+
     def test_health(self):
         response = self.client.get("/health")
         self.assertEqual(response.json, {"status": "ok"})

@@ -5,6 +5,7 @@ from auction import (
     auction_has_ended,
     connect,
     create_auction,
+    delete_auction,
     get_auction,
     get_winner,
     list_auctions,
@@ -62,6 +63,15 @@ class AuctionTests(unittest.TestCase):
         self.assertEqual(get_winner(self.connection, "auction-1")["nickname"], "Player_2")
         with self.assertRaisesRegex(ValueError, "ended"):
             place_bid(self.connection, "auction-1", "Player_3", 30)
+
+    def test_deletes_auction_and_its_bids(self):
+        create_auction(self.connection, "auction-1", "Sword", 60)
+        place_bid(self.connection, "auction-1", "Player_1", 10)
+        delete_auction(self.connection, "auction-1")
+        self.assertEqual(list_auctions(self.connection), [])
+        self.assertEqual(
+            self.connection.execute("SELECT COUNT(*) FROM bids").fetchone()[0], 0
+        )
 
 
 if __name__ == "__main__":

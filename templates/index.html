@@ -5,12 +5,18 @@
   {% if auctions %}
     <div class="auction-list">
       {% for auction in auctions %}
-        <a class="auction-card" href="{{ url_for('auction_page', auction_id=auction['id']) }}">
-          <strong>{{ auction['text'] }}</strong>
-          <span>ID: {{ auction['id'] }}</span>
-          <span>Ставок: {{ auction['bid_count'] }}</span>
-          {% if auction['ends_at'] %}<span>До: {{ auction['ends_at'] }} UTC</span>{% endif %}
-        </a>
+        <div class="auction-card">
+          <a class="auction-link" href="{{ url_for('auction_page', auction_id=auction['id']) }}">
+            <strong>{{ auction['text'] }}</strong>
+            <span>ID: {{ auction['id'] }}</span>
+            <span>Ставок: {{ auction['bid_count'] }}</span>
+            {% if auction['ends_at'] %}<span>До: {{ auction['ends_at'] }} UTC</span>{% endif %}
+          </a>
+          <form method="post" action="{{ url_for('delete_auction_page', auction_id=auction['id']) }}"
+                onsubmit="return confirm('Удалить аукцион и все ставки?')">
+            <button class="danger small" type="submit">Удалить</button>
+          </form>
+        </div>
       {% endfor %}
     </div>
   {% else %}

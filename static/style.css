@@ -31,7 +31,7 @@ h2 { font-size: 1.35rem; }
   padding: 22px;
 }
 
-.auction-card {
+.auction-link {
   display: grid;
   gap: 8px;
   text-decoration: none;
@@ -39,6 +39,7 @@ h2 { font-size: 1.35rem; }
 
 .auction-card:hover { border-color: #6d87ff; }
 .auction-card span, .auction-id { color: #aeb8cd; }
+.auction-card form { margin-top: 14px; }
 .panel { margin-top: 24px; }
 .back { color: #aeb8cd; }
 
@@ -55,6 +56,10 @@ input, button {
 input { color: #fff; background: #0f1420; }
 button { color: #fff; background: #526de5; border: 0; cursor: pointer; font-weight: 700; }
 button:hover { background: #647ff1; }
+.danger { background: #9d3541; }
+.danger:hover { background: #b54250; }
+.small { width: auto; padding: 9px 14px; }
+.delete-form { margin: 16px 0; }
 
 table { width: 100%; border-collapse: collapse; }
 th, td { padding: 12px 8px; border-bottom: 1px solid #2b3447; text-align: left; }

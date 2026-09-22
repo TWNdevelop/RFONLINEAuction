@@ -127,6 +127,17 @@ def get_winner(connection: sqlite3.Connection, auction_id: str):
     ).fetchone()
 
 
+def delete_auction(connection: sqlite3.Connection, auction_id: str) -> None:
+    auction = connection.execute(
+        "SELECT id FROM auctions WHERE id = ?", (auction_id,)
+    ).fetchone()
+    if auction is None:
+        raise ValueError(f"auction not found: {auction_id}")
+    connection.execute("DELETE FROM bids WHERE auction_id = ?", (auction_id,))
+    connection.execute("DELETE FROM auctions WHERE id = ?", (auction_id,))
+    connection.commit()
+
+
 def auction_has_ended(auction, now: datetime | None = None) -> bool:
     if not auction["ends_at"]:
         return False
