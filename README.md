@@ -39,3 +39,19 @@ python send_points.py players.example.json --keypair C:\path\to\devnet-keypair.j
 
 Файл ключа нельзя добавлять в Git. `id.json` и `*-keypair.json` уже исключены
 через `.gitignore`.
+
+## Подсчёт итоговых очков
+
+Скрипт читает все Memo-транзакции кошелька в Devnet и суммирует очки по никам:
+
+```powershell
+python calculate_points.py --keypair devnet-keypair.json
+```
+
+Также можно считать по публичному адресу без файла ключа:
+
+```powershell
+python calculate_points.py --address KUEHhrkKw22QTCZrmPhshN3QkpCtbacrhwiUN4Hw7Fg
+```
+
+Старые хеш-записи и посторонние транзакции автоматически игнорируются.
