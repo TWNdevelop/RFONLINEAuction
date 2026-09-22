@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 from dataclasses import dataclass
 from pathlib import Path
@@ -11,6 +10,7 @@ from typing import Any
 
 MAX_PLAYERS = 50
 MAX_NICKNAME_BYTES = 64
+MAX_MEMO_BYTES = 1_000
 
 
 @dataclass(frozen=True)
@@ -61,23 +61,19 @@ def load_players(path: str | Path) -> tuple[PlayerPoints, ...]:
     return tuple(players)
 
 
-def canonical_json_bytes(players: tuple[PlayerPoints, ...]) -> bytes:
-    """Return stable JSON bytes so input order and formatting do not affect the hash."""
-    canonical_players = [
-        {"nickname": player.nickname, "points": player.points}
+def memo_bytes(players: tuple[PlayerPoints, ...]) -> bytes:
+    """Encode the complete list as compact JSON for one Solana Memo transaction."""
+    compact_players = [
+        [player.nickname, player.points]
         for player in sorted(players, key=lambda player: player.nickname.casefold())
     ]
-    return json.dumps(
-        canonical_players,
+    encoded = json.dumps(
+        compact_players,
         ensure_ascii=False,
         separators=(",", ":"),
-        sort_keys=True,
     ).encode("utf-8")
-
-
-def calculate_hash(players: tuple[PlayerPoints, ...]) -> str:
-    return hashlib.sha256(canonical_json_bytes(players)).hexdigest()
-
-
-def memo_bytes(players: tuple[PlayerPoints, ...]) -> bytes:
-    return f"RFOA1:{calculate_hash(players)}".encode("ascii")
+    if len(encoded) > MAX_MEMO_BYTES:
+        raise ValueError(
+            f"the complete list is {len(encoded)} bytes; maximum is {MAX_MEMO_BYTES}"
+        )
+    return encoded

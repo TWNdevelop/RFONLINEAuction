@@ -1,4 +1,4 @@
-"""Write one hash of a player points list to Solana Devnet."""
+"""Write a complete player points list to one Solana Devnet transaction."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ import json
 import sys
 from pathlib import Path
 
-from points_data import calculate_hash, load_players, memo_bytes
+from points_data import load_players, memo_bytes
 
 
 DEVNET_RPC = "https://api.devnet.solana.com"
@@ -67,7 +67,7 @@ def send_hash(players, keypair_path: Path, rpc_url: str) -> str:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Hash a player points JSON list and write one record to Solana Devnet."
+        description="Write a player points JSON list to one Solana Devnet transaction."
     )
     parser.add_argument("json_file", type=Path, help="path to the player points JSON file")
     parser.add_argument(
@@ -77,7 +77,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--rpc", default=DEVNET_RPC, help="Solana RPC URL")
     parser.add_argument(
-        "--dry-run", action="store_true", help="validate and hash without sending"
+        "--dry-run", action="store_true", help="validate and encode without sending"
     )
     return parser.parse_args()
 
@@ -86,10 +86,10 @@ def main() -> int:
     args = parse_args()
     try:
         players = load_players(args.json_file)
-        digest = calculate_hash(players)
+        memo = memo_bytes(players)
         print(f"Players: {len(players)}")
-        print(f"SHA-256: {digest}")
-        print(f"Memo: {memo_bytes(players).decode('ascii')}")
+        print(f"Memo bytes: {len(memo)}")
+        print(f"Memo: {memo.decode('utf-8')}")
         if args.dry_run:
             return 0
         if args.keypair is None:

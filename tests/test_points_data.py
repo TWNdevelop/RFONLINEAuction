@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from points_data import calculate_hash, load_players, memo_bytes
+from points_data import load_players, memo_bytes
 
 
 class PointsDataTests(unittest.TestCase):
@@ -20,10 +20,9 @@ class PointsDataTests(unittest.TestCase):
         )
         self.assertEqual(players[0].nickname, "DarkKnight")
         self.assertEqual(players[0].points, 150)
-        self.assertRegex(calculate_hash(players), r"^[0-9a-f]{64}$")
-        self.assertEqual(memo_bytes(players), f"RFOA1:{calculate_hash(players)}".encode())
+        self.assertEqual(memo_bytes(players), b'[["DarkKnight",150]]')
 
-    def test_hash_does_not_depend_on_list_order(self):
+    def test_memo_does_not_depend_on_list_order(self):
         first = load_players(
             self.write_json(
                 [
@@ -40,7 +39,8 @@ class PointsDataTests(unittest.TestCase):
                 ]
             )
         )
-        self.assertEqual(calculate_hash(first), calculate_hash(second))
+        self.assertEqual(memo_bytes(first), memo_bytes(second))
+        self.assertEqual(memo_bytes(first), b'[["One",1],["Two",2]]')
 
     def test_rejects_more_than_50_players(self):
         path = self.write_json(
