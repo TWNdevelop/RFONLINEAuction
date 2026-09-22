@@ -25,6 +25,20 @@ class WebTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Test Sword", response.data)
 
+    def test_creates_auction_from_form(self):
+        response = self.client.post(
+            "/auction/new",
+            data={
+                "auction_id": "auction-2",
+                "text": "Test Shield",
+                "lifetime_minutes": "30",
+            },
+            follow_redirects=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Test Shield", response.data)
+        self.assertIn(b"auction-timer", response.data)
+
     def test_saves_bid_from_form(self):
         response = self.client.post(
             "/auction/auction-1",

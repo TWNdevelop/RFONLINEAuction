@@ -1,7 +1,10 @@
 {% extends "base.html" %}
 {% block title %}Аукционы{% endblock %}
 {% block content %}
-  <h1>Аукционы</h1>
+  <div class="title-row">
+    <h1>Аукционы</h1>
+    <a class="button-link" href="{{ url_for('new_auction') }}">Создать аукцион</a>
+  </div>
   {% if auctions %}
     <div class="auction-list">
       {% for auction in auctions %}

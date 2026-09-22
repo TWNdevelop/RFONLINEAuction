@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Создание аукциона{% endblock %}
+{% block content %}
+  <a class="back" href="{{ url_for('index') }}">← Все аукционы</a>
+  <h1>Создать аукцион</h1>
+
+  <section class="panel">
+    <form method="post">
+      <label>
+        ID аукциона
+        <input name="auction_id" required maxlength="64"
+               value="{{ request.form.get('auction_id', '') }}">
+      </label>
+      <label>
+        Описание
+        <textarea name="text" required maxlength="500">{{ request.form.get('text', '') }}</textarea>
+      </label>
+      <label>
+        Время жизни в минутах
+        <input name="lifetime_minutes" type="number" required min="1" step="1"
+               value="{{ request.form.get('lifetime_minutes', '60') }}">
+      </label>
+      <button type="submit">Создать</button>
+    </form>
+  </section>
+{% endblock %}

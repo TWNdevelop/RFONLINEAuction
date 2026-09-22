@@ -10,6 +10,7 @@ from flask import Flask, abort, flash, redirect, render_template, request, url_f
 from auction import (
     auction_has_ended,
     connect,
+    create_auction,
     delete_auction,
     get_auction,
     get_winner,
@@ -60,6 +61,27 @@ def create_app(database: str | Path | None = None) -> Flask:
             ended=ended,
             winner=winner,
         )
+
+    @app.route("/auction/new", methods=["GET", "POST"])
+    def new_auction():
+        if request.method == "POST":
+            auction_id = request.form.get("auction_id", "")
+            text = request.form.get("text", "")
+            raw_lifetime = request.form.get("lifetime_minutes", "")
+            try:
+                lifetime_minutes = int(raw_lifetime)
+                with closing(connect(app.config["DATABASE"])) as connection:
+                    create_auction(
+                        connection,
+                        auction_id,
+                        text,
+                        lifetime_minutes,
+                    )
+                flash("Аукцион создан")
+                return redirect(url_for("auction_page", auction_id=auction_id.strip()))
+            except (ValueError, TypeError) as error:
+                flash(str(error), "error")
+        return render_template("new_auction.html")
 
     @app.get("/health")
     def health():
