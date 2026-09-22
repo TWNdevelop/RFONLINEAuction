@@ -23,10 +23,12 @@
               </time>
             {% endif %}
           </a>
-          <form method="post" action="{{ url_for('delete_auction_page', auction_id=auction['id']) }}"
-                onsubmit="return confirm('Удалить аукцион и все ставки?')">
-            <button class="danger small" type="submit">Удалить</button>
-          </form>
+          {% if not auction['ended'] %}
+            <form method="post" action="{{ url_for('delete_auction_page', auction_id=auction['id']) }}"
+                  onsubmit="return confirm('Удалить аукцион и все ставки?')">
+              <button class="danger small" type="submit">Удалить</button>
+            </form>
+          {% endif %}
         </div>
       {% endfor %}
     </div>

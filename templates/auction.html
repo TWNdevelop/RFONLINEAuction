@@ -4,11 +4,13 @@
   <a class="back" href="{{ url_for('index') }}">← Все аукционы</a>
   <h1>{{ auction['text'] }}</h1>
   <p class="auction-id">ID аукциона: <strong>{{ auction['id'] }}</strong></p>
-  <form class="delete-form" method="post"
-        action="{{ url_for('delete_auction_page', auction_id=auction['id']) }}"
-        onsubmit="return confirm('Удалить аукцион и все ставки?')">
-    <button class="danger" type="submit">Удалить аукцион</button>
-  </form>
+  {% if not ended %}
+    <form class="delete-form" method="post"
+          action="{{ url_for('delete_auction_page', auction_id=auction['id']) }}"
+          onsubmit="return confirm('Удалить аукцион и все ставки?')">
+      <button class="danger" type="submit">Удалить аукцион</button>
+    </form>
+  {% endif %}
 
   {% if ended %}
     <section class="result">

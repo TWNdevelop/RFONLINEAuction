@@ -52,6 +52,7 @@ class WebTests(unittest.TestCase):
     def test_page_contains_countdown(self):
         response = self.client.get("/auction/auction-1")
         self.assertIn(b"auction-timer", response.data)
+        self.assertIn("Удалить аукцион".encode(), response.data)
 
     def test_deletes_auction(self):
         response = self.client.post(

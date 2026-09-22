@@ -73,6 +73,18 @@ class AuctionTests(unittest.TestCase):
             self.connection.execute("SELECT COUNT(*) FROM bids").fetchone()[0], 0
         )
 
+    def test_cannot_delete_completed_auction(self):
+        create_auction(self.connection, "auction-1", "Sword", 60)
+        past = datetime.now(UTC) - timedelta(seconds=1)
+        self.connection.execute(
+            "UPDATE auctions SET ends_at = ? WHERE id = ?",
+            (past.isoformat(), "auction-1"),
+        )
+        self.connection.commit()
+        with self.assertRaisesRegex(ValueError, "cannot be deleted"):
+            delete_auction(self.connection, "auction-1")
+        self.assertEqual(len(list_auctions(self.connection)), 1)
+
 
 if __name__ == "__main__":
     unittest.main()

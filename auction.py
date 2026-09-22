@@ -141,10 +141,12 @@ def get_winner(connection: sqlite3.Connection, auction_id: str):
 
 def delete_auction(connection: sqlite3.Connection, auction_id: str) -> None:
     auction = connection.execute(
-        "SELECT id FROM auctions WHERE id = ?", (auction_id,)
+        "SELECT id, ends_at FROM auctions WHERE id = ?", (auction_id,)
     ).fetchone()
     if auction is None:
         raise ValueError(f"auction not found: {auction_id}")
+    if auction_has_ended(auction):
+        raise ValueError("completed auction cannot be deleted")
     connection.execute("DELETE FROM bids WHERE auction_id = ?", (auction_id,))
     connection.execute("DELETE FROM auctions WHERE id = ?", (auction_id,))
     connection.commit()
@@ -161,6 +163,10 @@ def list_auctions(connection: sqlite3.Connection):
         """
         SELECT auctions.id, auctions.text, auctions.ends_at,
                auctions.finalized, auctions.result_signature,
+               CASE
+                   WHEN auctions.ends_at IS NOT NULL AND auctions.ends_at <= ? THEN 1
+                   ELSE 0
+               END AS ended,
                (
                    SELECT winner.nickname
                    FROM bids AS winner
@@ -173,7 +179,8 @@ def list_auctions(connection: sqlite3.Connection):
         LEFT JOIN bids ON bids.auction_id = auctions.id
         GROUP BY auctions.id, auctions.text, auctions.ends_at
         ORDER BY auctions.id
-        """
+        """,
+        (datetime.now(UTC).isoformat(),),
     ).fetchall()
 
 
