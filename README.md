@@ -55,3 +55,31 @@ python calculate_points.py --address KUEHhrkKw22QTCZrmPhshN3QkpCtbacrhwiUN4Hw7Fg
 ```
 
 Старые хеш-записи и посторонние транзакции автоматически игнорируются.
+
+## Скелет аукциона
+
+Создать аукцион с идентификатором и текстом:
+
+```powershell
+python auction.py create auction-1 "Меч Архонта"
+```
+
+Сохранить ставку игрока:
+
+```powershell
+python auction.py bid auction-1 Player_1 25
+```
+
+Посмотреть аукцион и его ставки:
+
+```powershell
+python auction.py show auction-1
+```
+
+Посмотреть список аукционов:
+
+```powershell
+python auction.py list
+```
+
+Аукционы и ставки сохраняются в локальной базе `auction.sqlite3`.
