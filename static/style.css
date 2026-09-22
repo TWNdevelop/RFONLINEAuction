@@ -79,6 +79,10 @@ h2 { font-size: 1.2rem; }
   line-height: 1.25;
 }
 .auction-deadline span { color: inherit; }
+.auction-card .auction-winner {
+  color: #5fd38d;
+  font-weight: 700;
+}
 .auction-card form { justify-items: center; margin-top: 10px; }
 .panel { margin-top: 24px; }
 .back { color: #aeb8cd; }

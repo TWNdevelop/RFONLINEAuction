@@ -161,6 +161,13 @@ def list_auctions(connection: sqlite3.Connection):
         """
         SELECT auctions.id, auctions.text, auctions.ends_at,
                auctions.finalized, auctions.result_signature,
+               (
+                   SELECT winner.nickname
+                   FROM bids AS winner
+                   WHERE winner.auction_id = auctions.id
+                   ORDER BY winner.points DESC, winner.id ASC
+                   LIMIT 1
+               ) AS winner_nickname,
                COUNT(bids.id) AS bid_count
         FROM auctions
         LEFT JOIN bids ON bids.auction_id = auctions.id

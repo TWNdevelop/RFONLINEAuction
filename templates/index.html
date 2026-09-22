@@ -13,10 +13,13 @@
             <strong>{{ auction['text'] }}</strong>
             <span>ID: {{ auction['id'] }}</span>
             <span>Ставок: {{ auction['bid_count'] }}</span>
+            {% if auction['finalized'] and auction['winner_nickname'] %}
+              <span class="auction-winner">{{ auction['winner_nickname'] }}</span>
+            {% endif %}
             {% if auction['ends_at'] %}
               <time class="auction-deadline" datetime="{{ auction['ends_at'] }}">
                 <span>{{ auction['ends_at'][:10] }}</span>
-                <span>{{ auction['ends_at'][11:19] }} UTC</span>
+                <span>{{ auction['ends_at'][11:16] }} UTC</span>
               </time>
             {% endif %}
           </a>
