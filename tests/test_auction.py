@@ -1,32 +1,26 @@
-import sqlite3
 import unittest
+from datetime import UTC, datetime, timedelta
 
-from auction import create_auction, get_auction, list_auctions, place_bid
+from auction import (
+    auction_has_ended,
+    connect,
+    create_auction,
+    get_auction,
+    get_winner,
+    list_auctions,
+    place_bid,
+)
 
 
 class AuctionTests(unittest.TestCase):
     def setUp(self):
-        self.connection = sqlite3.connect(":memory:")
-        self.connection.row_factory = sqlite3.Row
-        self.connection.execute("PRAGMA foreign_keys = ON")
-        self.connection.executescript(
-            """
-            CREATE TABLE auctions (id TEXT PRIMARY KEY, text TEXT NOT NULL);
-            CREATE TABLE bids (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                auction_id TEXT NOT NULL REFERENCES auctions(id),
-                nickname TEXT NOT NULL,
-                points INTEGER NOT NULL CHECK (points > 0),
-                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-            );
-            """
-        )
+        self.connection = connect(":memory:")
 
     def tearDown(self):
         self.connection.close()
 
     def test_creates_auction_and_saves_bids(self):
-        create_auction(self.connection, "auction-1", "Sword")
+        create_auction(self.connection, "auction-1", "Sword", 60)
         place_bid(self.connection, "auction-1", "Player_1", 10)
         place_bid(self.connection, "auction-1", "Player_2", 20)
 
@@ -38,19 +32,36 @@ class AuctionTests(unittest.TestCase):
         )
 
     def test_rejects_duplicate_auction_id(self):
-        create_auction(self.connection, "auction-1", "Sword")
+        create_auction(self.connection, "auction-1", "Sword", 60)
         with self.assertRaisesRegex(ValueError, "already exists"):
-            create_auction(self.connection, "auction-1", "Shield")
+            create_auction(self.connection, "auction-1", "Shield", 60)
 
     def test_rejects_bid_for_missing_auction(self):
         with self.assertRaisesRegex(ValueError, "not found"):
             place_bid(self.connection, "missing", "Player_1", 10)
 
     def test_lists_auction_and_bid_count(self):
-        create_auction(self.connection, "auction-1", "Sword")
+        create_auction(self.connection, "auction-1", "Sword", 60)
         place_bid(self.connection, "auction-1", "Player_1", 10)
         auctions = list_auctions(self.connection)
         self.assertEqual(auctions[0]["bid_count"], 1)
+
+    def test_ended_auction_rejects_bids_and_has_winner(self):
+        create_auction(self.connection, "auction-1", "Sword", 60)
+        place_bid(self.connection, "auction-1", "Player_1", 10)
+        place_bid(self.connection, "auction-1", "Player_2", 20)
+        past = datetime.now(UTC) - timedelta(seconds=1)
+        self.connection.execute(
+            "UPDATE auctions SET ends_at = ? WHERE id = ?",
+            (past.isoformat(), "auction-1"),
+        )
+        self.connection.commit()
+
+        auction, _ = get_auction(self.connection, "auction-1")
+        self.assertTrue(auction_has_ended(auction))
+        self.assertEqual(get_winner(self.connection, "auction-1")["nickname"], "Player_2")
+        with self.assertRaisesRegex(ValueError, "ended"):
+            place_bid(self.connection, "auction-1", "Player_3", 30)
 
 
 if __name__ == "__main__":

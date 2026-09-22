@@ -7,7 +7,14 @@ from pathlib import Path
 
 from flask import Flask, abort, flash, redirect, render_template, request, url_for
 
-from auction import connect, get_auction, list_auctions, place_bid
+from auction import (
+    auction_has_ended,
+    connect,
+    get_auction,
+    get_winner,
+    list_auctions,
+    place_bid,
+)
 
 
 PROJECT_DIR = Path(__file__).resolve().parent
@@ -41,9 +48,17 @@ def create_app(database: str | Path | None = None) -> Flask:
         try:
             with closing(connect(app.config["DATABASE"])) as connection:
                 auction, bids = get_auction(connection, auction_id)
+                ended = auction_has_ended(auction)
+                winner = get_winner(connection, auction_id) if ended else None
         except ValueError:
             abort(404)
-        return render_template("auction.html", auction=auction, bids=bids)
+        return render_template(
+            "auction.html",
+            auction=auction,
+            bids=bids,
+            ended=ended,
+            winner=winner,
+        )
 
     @app.get("/health")
     def health():

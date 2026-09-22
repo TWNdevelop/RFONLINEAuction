@@ -5,20 +5,38 @@
   <h1>{{ auction['text'] }}</h1>
   <p class="auction-id">ID аукциона: <strong>{{ auction['id'] }}</strong></p>
 
-  <section class="panel">
-    <h2>Сделать ставку</h2>
-    <form method="post">
-      <label>
-        Ник персонажа
-        <input name="nickname" required maxlength="64" autocomplete="nickname">
-      </label>
-      <label>
-        Ставка в очках
-        <input name="points" type="number" required min="1" step="1">
-      </label>
-      <button type="submit">Поставить</button>
-    </form>
-  </section>
+  {% if ended %}
+    <section class="result">
+      <strong>Аукцион завершён</strong>
+      {% if winner %}
+        <span>Победитель: {{ winner['nickname'] }}</span>
+        <span>Ставка: {{ winner['points'] }} очков</span>
+      {% else %}
+        <span>Ставок не было</span>
+      {% endif %}
+    </section>
+  {% elif auction['ends_at'] %}
+    <div class="timer" id="auction-timer" data-ends-at="{{ auction['ends_at'] }}">
+      До завершения: <strong>--:--:--</strong>
+    </div>
+  {% endif %}
+
+  {% if not ended %}
+    <section class="panel">
+      <h2>Сделать ставку</h2>
+      <form method="post">
+        <label>
+          Ник персонажа
+          <input name="nickname" required maxlength="64" autocomplete="nickname">
+        </label>
+        <label>
+          Ставка в очках
+          <input name="points" type="number" required min="1" step="1">
+        </label>
+        <button type="submit">Поставить</button>
+      </form>
+    </section>
+  {% endif %}
 
   <section class="panel">
     <h2>Ставки</h2>
@@ -39,4 +57,22 @@
       <p>Ставок пока нет.</p>
     {% endif %}
   </section>
+  {% if not ended and auction['ends_at'] %}
+    <script>
+      const timer = document.getElementById("auction-timer");
+      const value = timer.querySelector("strong");
+      const finish = new Date(timer.dataset.endsAt).getTime();
+      function updateTimer() {
+        const remaining = Math.max(0, finish - Date.now());
+        const seconds = Math.floor(remaining / 1000);
+        const hours = String(Math.floor(seconds / 3600)).padStart(2, "0");
+        const minutes = String(Math.floor((seconds % 3600) / 60)).padStart(2, "0");
+        const rest = String(seconds % 60).padStart(2, "0");
+        value.textContent = `${hours}:${minutes}:${rest}`;
+        if (remaining === 0) window.location.reload();
+      }
+      updateTimer();
+      setInterval(updateTimer, 1000);
+    </script>
+  {% endif %}
 {% endblock %}

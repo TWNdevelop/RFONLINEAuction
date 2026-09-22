@@ -9,6 +9,7 @@
           <strong>{{ auction['text'] }}</strong>
           <span>ID: {{ auction['id'] }}</span>
           <span>Ставок: {{ auction['bid_count'] }}</span>
+          {% if auction['ends_at'] %}<span>До: {{ auction['ends_at'] }} UTC</span>{% endif %}
         </a>
       {% endfor %}
     </div>

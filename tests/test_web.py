@@ -12,7 +12,7 @@ class WebTests(unittest.TestCase):
         self.temp_dir = tempfile.TemporaryDirectory()
         database = Path(self.temp_dir.name) / "test.sqlite3"
         with closing(connect(database)) as connection:
-            create_auction(connection, "auction-1", "Test Sword")
+            create_auction(connection, "auction-1", "Test Sword", 60)
         self.app = create_app(database)
         self.app.config["TESTING"] = True
         self.client = self.app.test_client()
@@ -34,6 +34,10 @@ class WebTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Player_1", response.data)
         self.assertIn(b"25", response.data)
+
+    def test_page_contains_countdown(self):
+        response = self.client.get("/auction/auction-1")
+        self.assertIn(b"auction-timer", response.data)
 
     def test_health(self):
         response = self.client.get("/health")

@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import sqlite3
 import sys
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 
@@ -19,7 +20,8 @@ def connect(database: str | Path) -> sqlite3.Connection:
         """
         CREATE TABLE IF NOT EXISTS auctions (
             id TEXT PRIMARY KEY,
-            text TEXT NOT NULL
+            text TEXT NOT NULL,
+            ends_at TEXT
         );
 
         CREATE TABLE IF NOT EXISTS bids (
@@ -31,20 +33,34 @@ def connect(database: str | Path) -> sqlite3.Connection:
         );
         """
     )
+    columns = {
+        row[1] for row in connection.execute("PRAGMA table_info(auctions)").fetchall()
+    }
+    if "ends_at" not in columns:
+        connection.execute("ALTER TABLE auctions ADD COLUMN ends_at TEXT")
+        connection.commit()
     return connection
 
 
-def create_auction(connection: sqlite3.Connection, auction_id: str, text: str) -> None:
+def create_auction(
+    connection: sqlite3.Connection,
+    auction_id: str,
+    text: str,
+    lifetime_minutes: int,
+) -> None:
     auction_id = auction_id.strip()
     text = text.strip()
     if not auction_id:
         raise ValueError("auction id cannot be empty")
     if not text:
         raise ValueError("auction text cannot be empty")
+    if lifetime_minutes <= 0:
+        raise ValueError("auction lifetime must be positive")
+    ends_at = datetime.now(UTC) + timedelta(minutes=lifetime_minutes)
     try:
         connection.execute(
-            "INSERT INTO auctions (id, text) VALUES (?, ?)",
-            (auction_id, text),
+            "INSERT INTO auctions (id, text, ends_at) VALUES (?, ?, ?)",
+            (auction_id, text, ends_at.isoformat()),
         )
         connection.commit()
     except sqlite3.IntegrityError as error:
@@ -63,10 +79,14 @@ def place_bid(
     if points <= 0:
         raise ValueError("points must be positive")
     auction = connection.execute(
-        "SELECT id FROM auctions WHERE id = ?", (auction_id,)
+        "SELECT id, ends_at FROM auctions WHERE id = ?", (auction_id,)
     ).fetchone()
     if auction is None:
         raise ValueError(f"auction not found: {auction_id}")
+    if auction["ends_at"] and datetime.now(UTC) >= datetime.fromisoformat(
+        auction["ends_at"]
+    ):
+        raise ValueError("auction has ended")
 
     cursor = connection.execute(
         "INSERT INTO bids (auction_id, nickname, points) VALUES (?, ?, ?)",
@@ -78,7 +98,7 @@ def place_bid(
 
 def get_auction(connection: sqlite3.Connection, auction_id: str):
     auction = connection.execute(
-        "SELECT id, text FROM auctions WHERE id = ?", (auction_id,)
+        "SELECT id, text, ends_at FROM auctions WHERE id = ?", (auction_id,)
     ).fetchone()
     if auction is None:
         raise ValueError(f"auction not found: {auction_id}")
@@ -94,13 +114,33 @@ def get_auction(connection: sqlite3.Connection, auction_id: str):
     return auction, bids
 
 
+def get_winner(connection: sqlite3.Connection, auction_id: str):
+    return connection.execute(
+        """
+        SELECT id, nickname, points, created_at
+        FROM bids
+        WHERE auction_id = ?
+        ORDER BY points DESC, id ASC
+        LIMIT 1
+        """,
+        (auction_id,),
+    ).fetchone()
+
+
+def auction_has_ended(auction, now: datetime | None = None) -> bool:
+    if not auction["ends_at"]:
+        return False
+    return (now or datetime.now(UTC)) >= datetime.fromisoformat(auction["ends_at"])
+
+
 def list_auctions(connection: sqlite3.Connection):
     return connection.execute(
         """
-        SELECT auctions.id, auctions.text, COUNT(bids.id) AS bid_count
+        SELECT auctions.id, auctions.text, auctions.ends_at,
+               COUNT(bids.id) AS bid_count
         FROM auctions
         LEFT JOIN bids ON bids.auction_id = auctions.id
-        GROUP BY auctions.id, auctions.text
+        GROUP BY auctions.id, auctions.text, auctions.ends_at
         ORDER BY auctions.id
         """
     ).fetchall()
@@ -114,6 +154,7 @@ def parse_args() -> argparse.Namespace:
     create = commands.add_parser("create", help="create an auction")
     create.add_argument("auction_id")
     create.add_argument("text")
+    create.add_argument("lifetime_minutes", type=int)
 
     bid = commands.add_parser("bid", help="place a bid")
     bid.add_argument("auction_id")
@@ -132,7 +173,12 @@ def main() -> int:
     try:
         with connect(args.db) as connection:
             if args.command == "create":
-                create_auction(connection, args.auction_id, args.text)
+                create_auction(
+                    connection,
+                    args.auction_id,
+                    args.text,
+                    args.lifetime_minutes,
+                )
                 print(f"Auction created: {args.auction_id}")
             elif args.command == "bid":
                 bid_id = place_bid(

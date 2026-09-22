@@ -61,8 +61,10 @@ python calculate_points.py --address KUEHhrkKw22QTCZrmPhshN3QkpCtbacrhwiUN4Hw7Fg
 Создать аукцион с идентификатором и текстом:
 
 ```powershell
-python auction.py create auction-1 "Меч Архонта"
+python auction.py create auction-1 "Меч Архонта" 60
 ```
+
+Последнее число — срок жизни аукциона в минутах.
 
 Сохранить ставку игрока:
 
