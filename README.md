@@ -83,3 +83,13 @@ python auction.py list
 ```
 
 Аукционы и ставки сохраняются в локальной базе `auction.sqlite3`.
+
+## Web frontend
+
+Создай хотя бы один аукцион через CLI, затем запусти сайт:
+
+```powershell
+python web.py
+```
+
+Открой в браузере `http://127.0.0.1:8000`.

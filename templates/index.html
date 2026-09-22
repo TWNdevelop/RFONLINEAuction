@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Аукционы{% endblock %}
+{% block content %}
+  <h1>Аукционы</h1>
+  {% if auctions %}
+    <div class="auction-list">
+      {% for auction in auctions %}
+        <a class="auction-card" href="{{ url_for('auction_page', auction_id=auction['id']) }}">
+          <strong>{{ auction['text'] }}</strong>
+          <span>ID: {{ auction['id'] }}</span>
+          <span>Ставок: {{ auction['bid_count'] }}</span>
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p>Аукционов пока нет.</p>
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,44 @@
+from contextlib import closing
+import tempfile
+import unittest
+from pathlib import Path
+
+from auction import connect, create_auction
+from web import create_app
+
+
+class WebTests(unittest.TestCase):
+    def setUp(self):
+        self.temp_dir = tempfile.TemporaryDirectory()
+        database = Path(self.temp_dir.name) / "test.sqlite3"
+        with closing(connect(database)) as connection:
+            create_auction(connection, "auction-1", "Test Sword")
+        self.app = create_app(database)
+        self.app.config["TESTING"] = True
+        self.client = self.app.test_client()
+
+    def tearDown(self):
+        self.temp_dir.cleanup()
+
+    def test_lists_auctions(self):
+        response = self.client.get("/")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Test Sword", response.data)
+
+    def test_saves_bid_from_form(self):
+        response = self.client.post(
+            "/auction/auction-1",
+            data={"nickname": "Player_1", "points": "25"},
+            follow_redirects=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Player_1", response.data)
+        self.assertIn(b"25", response.data)
+
+    def test_health(self):
+        response = self.client.get("/health")
+        self.assertEqual(response.json, {"status": "ok"})
+
+
+if __name__ == "__main__":
+    unittest.main()

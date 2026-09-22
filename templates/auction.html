@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}{{ auction['text'] }}{% endblock %}
+{% block content %}
+  <a class="back" href="{{ url_for('index') }}">← Все аукционы</a>
+  <h1>{{ auction['text'] }}</h1>
+  <p class="auction-id">ID аукциона: <strong>{{ auction['id'] }}</strong></p>
+
+  <section class="panel">
+    <h2>Сделать ставку</h2>
+    <form method="post">
+      <label>
+        Ник персонажа
+        <input name="nickname" required maxlength="64" autocomplete="nickname">
+      </label>
+      <label>
+        Ставка в очках
+        <input name="points" type="number" required min="1" step="1">
+      </label>
+      <button type="submit">Поставить</button>
+    </form>
+  </section>
+
+  <section class="panel">
+    <h2>Ставки</h2>
+    {% if bids %}
+      <table>
+        <thead><tr><th>Игрок</th><th>Очки</th><th>Время UTC</th></tr></thead>
+        <tbody>
+          {% for bid in bids|reverse %}
+            <tr>
+              <td>{{ bid['nickname'] }}</td>
+              <td>{{ bid['points'] }}</td>
+              <td>{{ bid['created_at'] }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>Ставок пока нет.</p>
+    {% endif %}
+  </section>
+{% endblock %}
